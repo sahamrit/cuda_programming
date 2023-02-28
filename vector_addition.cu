@@ -1,6 +1,15 @@
 #include <stdio.h>
 #include <assert.h>
 
+inline cudaError_t checkCuda(cudaError_t result)
+{
+  if (result != cudaSuccess) {
+    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
+    assert(result == cudaSuccess);
+  }
+  return result;
+}
+
 void initWith(float num, float *a, int N)
 {
     for (int i = 0; i < N; ++i)
@@ -31,15 +40,6 @@ void checkElementsAre(float target, float *array, int N)
         }
     }
     printf("SUCCESS! All values added correctly.\n");
-}
-
-inline cudaError_t checkCuda(cudaError_t result)
-{
-  if (result != cudaSuccess) {
-    fprintf(stderr, "CUDA Runtime Error: %s\n", cudaGetErrorString(result));
-    assert(result == cudaSuccess);
-  }
-  return result;
 }
 
 int main()
