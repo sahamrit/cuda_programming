@@ -97,25 +97,29 @@ int main()
   float *b;
   float *c;
 
+  cudaError_t addVectorsErr;
+  cudaError_t asyncErr;
+
   int deviceId;
   cudaGetDevice(&deviceId);                                         // The ID of the currently active GPU device.
   
-  cudaMemPrefetchAsync(a, size, deviceId);  
-  cudaMemPrefetchAsync(b, size, deviceId);  
-  cudaMemPrefetchAsync(c, size, deviceId);  
-
   cudaMallocManaged(&a, size);
   cudaMallocManaged(&b, size);
   cudaMallocManaged(&c, size);
+
+
+  cudaMemPrefetchAsync(a, size, deviceId);  
+  cudaMemPrefetchAsync(b, size, deviceId);  
+  cudaMemPrefetchAsync(c, size, deviceId);  
 
   initWith<<<numberOfBlocks, threadsPerBlock>>>(3, a, N);
   initWith<<<numberOfBlocks, threadsPerBlock>>>(4, b, N);
   initWith<<<numberOfBlocks, threadsPerBlock>>>(0, c, N);
 
+  asyncErr = cudaDeviceSynchronize();
+  if(asyncErr != cudaSuccess) printf("Error: %s\n", cudaGetErrorString(asyncErr));
+  
   addVectorsInto<<<numberOfBlocks, threadsPerBlock>>>(c, a, b, N);
-
-  cudaError_t addVectorsErr;
-  cudaError_t asyncErr;
 
   addVectorsErr = cudaGetLastError();
   if(addVectorsErr != cudaSuccess) printf("Error: %s\n", cudaGetErrorString(addVectorsErr));
