@@ -1,0 +1,3 @@
+export PATH=$PATH:/scratch/workspaceblobstore/LocalUpload/User/sahuamrit/Repo/cuda_tools/target-linux-x64/
+
+ scp.exe -r .\target-linux-x64\ node-0.100eb9b2-7439-4273-bd91-be9acbec6d32:/scratch/workspaceblobstore/LocalUpload/User/sahuamrit/Repo/cuda_tools
