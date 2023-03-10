@@ -1,0 +1,2 @@
+01-nbody 0.046 Billion Interactions per second
+01-nbody-bodyForce-kernel 19.55 Billion Interactions per second Made the bodyForces a CUDA kernel
