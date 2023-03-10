@@ -1,0 +1,24 @@
+01-nbody    0.046 Billion Interactions per second   Start
+01-nbody-bodyForce-kernel   19.54 Billion Interactions per second   Made the bodyForces a CUDA kernel
+02-nbody-position-integration-kernel    31.79 Billion Interactions per second Made the positionIntegration a CUDA kernel. This parallelised the position integration as well as reduced page faults of DtoH. There was also a async memory prefetch added before launch of kernel.
+
+Running nbody simulator with 4096 bodies
+----------------------------------------
+
+Application should run faster than 0.9s
+Your application ran in: 0.2161s
+Your application reports  16.862 Billion Interactions / second
+
+Your results are correct
+
+Running nbody simulator with 65536 bodies
+----------------------------------------
+
+Application should run faster than 1.3s
+Your application ran in: 0.5526s
+Your application reports  118.076 Billion Interactions / second
+
+Your results are correct
+
+Congratulations! You passed the assessment!
+See instructions below to generate a certificate, and see if you can accelerate the simulator even more!

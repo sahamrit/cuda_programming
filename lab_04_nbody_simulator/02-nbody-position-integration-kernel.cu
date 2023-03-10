@@ -113,6 +113,8 @@ int main(const int argc, const char** argv) {
 
   double totalTime = 0.0;
 
+  cudaMemPrefetchAsync(buf, bytes, deviceId);
+
   /*
    * This simulation will run for 10 cycles of time, calculating gravitational
    * interaction amongst bodies, and adjusting their positions to reflect.
@@ -145,6 +147,7 @@ int main(const int argc, const char** argv) {
 
   double avgTime = totalTime / (double)(nIters);
   float billionsOfOpsPerSecond = 1e-9 * nBodies * nBodies / avgTime;
+
   write_values_to_file(solution_values, buf, bytes);
 
   // You will likely enjoy watching this value grow as you accelerate the application,
