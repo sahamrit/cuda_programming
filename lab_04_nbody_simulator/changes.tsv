@@ -1,0 +1,3 @@
+01-nbody    0.046 Billion Interactions per second   Start
+01-nbody-bodyForce-kernel   19.54 Billion Interactions per second   Made the bodyForces a CUDA kernel
+02-nbody-position-integration-kernel    29.75 Billion Interactions per second Made the positionIntegration a CUDA kernel. This parallelised the position integration as well as reduced page faults of DtoH
