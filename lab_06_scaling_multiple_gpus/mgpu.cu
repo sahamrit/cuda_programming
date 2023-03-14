@@ -1,7 +1,8 @@
-#include <cstdint>
-#include <iostream>
+#include <bits/stdc++.h>
 #include "helpers.cuh"
 #include "encryption.cuh"
+
+using namespace std;
 
 void encrypt_cpu(uint64_t * data, uint64_t num_entries, 
                  uint64_t num_iters, bool parallel=true) {
@@ -44,9 +45,26 @@ int main (int argc, char * argv[]) {
     const uint64_t num_iters = 1UL << 10;
     const bool openmp = true;
 
-    uint64_t * data_cpu, * data_gpu;
+    int num_gpus ;
+    cudaGetDeviceCount(&num_gpus);
+    
+    uint64_t * data_cpu;    
+    uint64_t  *data_gpus[num_gpus];
+
+    uint64_t segment_entries = sdiv(num_entries , num_gpus);
+
     cudaMallocHost(&data_cpu, sizeof(uint64_t)*num_entries);
-    cudaMalloc    (&data_gpu, sizeof(uint64_t)*num_entries);
+
+    // For each GPU...
+    for (int i = 0 ; i < num_gpus; i++){
+        cudaSetDevice(i);
+
+        uint64_t lower_idx = segment_entries * i;
+        uint64_t curr_segment_entries = min (num_entries - lower_idx, segment_entries);
+        size_t curr_segment_size = curr_segment_entries * sizeof(uint64_t);         
+        cudaMalloc (&data_gpus[i], curr_segment_size);   
+    }
+    
     check_last_error();
 
     if (!encrypted_file_exists(encrypted_file)) {
@@ -56,19 +74,45 @@ int main (int argc, char * argv[]) {
         read_encrypted_from_file(encrypted_file, data_cpu, sizeof(uint64_t)*num_entries);
     }
 
-    cudaMemcpy(data_gpu, data_cpu, 
-               sizeof(uint64_t)*num_entries, cudaMemcpyHostToDevice);
+    // For each GPU...
+    for (int i = 0 ; i < num_gpus; i++){
+        cudaSetDevice(i);
+
+        uint64_t lower_idx = segment_entries * i;
+        uint64_t curr_segment_entries = min (num_entries - lower_idx, segment_entries);
+        size_t curr_segment_size = curr_segment_entries * sizeof(uint64_t); 
+
+        cudaMemcpy(data_gpus[i], &data_cpu[lower_idx], curr_segment_size, cudaMemcpyHostToDevice );      
+    }
+
     check_last_error();
 
     timer.start();
-    decrypt_gpu<<<80*32, 64>>>(data_gpu, num_entries, num_iters);
-    
+
+    // For each GPU...
+    for (int i = 0 ; i < num_gpus; i++){
+        cudaSetDevice(i);
+
+        uint64_t lower_idx = segment_entries * i;
+        uint64_t curr_segment_entries = min (num_entries - lower_idx, segment_entries);
+
+        decrypt_gpu<<<80*32, 64>>>(data_gpus[i], curr_segment_entries, num_iters);  
+    }
     // As you refactor, be sure to stop the timer after all GPU kernel launches are complete
     timer.stop("total kernel execution on GPUs");
     check_last_error();
 
-    cudaMemcpy(data_cpu, data_gpu, 
-               sizeof(uint64_t)*num_entries, cudaMemcpyDeviceToHost);
+    // For each GPU...
+    for (int i = 0 ; i < num_gpus; i++){
+        cudaSetDevice(i);
+
+        uint64_t lower_idx = segment_entries * i;
+        uint64_t curr_segment_entries = min (num_entries - lower_idx, segment_entries);
+        size_t curr_segment_size = curr_segment_entries * sizeof(uint64_t); 
+
+        cudaMemcpy(&data_cpu[lower_idx], data_gpus[i], curr_segment_size, cudaMemcpyDeviceToHost );      
+    }
+
     check_last_error();
 
     const bool success = check_result_cpu(data_cpu, num_entries, openmp);
@@ -77,6 +121,11 @@ int main (int argc, char * argv[]) {
               << std::endl;
 
     cudaFreeHost(data_cpu);
-    cudaFree    (data_gpu);
+
+    // For each GPU...
+    for (int i = 0 ; i < num_gpus; i++){
+        cudaSetDevice(i);
+        cudaFree(data_gpus[i]);   
+    }
     check_last_error();
 }
