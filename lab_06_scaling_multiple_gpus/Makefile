@@ -9,6 +9,9 @@ all: mgpu
 mgpu: mgpu.cu
 	$(CUDACXX) $(CUDACXXFLAGS) -Xcompiler="$(CXXFLAGS)" mgpu.cu -o mgpu
 
+mgpu_debug: mgpu.cu
+	$(CUDACXX) $(CUDACXXFLAGS) -Xcompiler="$(CXXFLAGS)" -g -G mgpu.cu -o mgpu
+
 mgpu_solution: mgpu_solution.cu
 	$(CUDACXX) $(CUDACXXFLAGS) -Xcompiler="$(CXXFLAGS)" mgpu_solution.cu -o mgpu_solution
 
